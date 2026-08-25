@@ -211,3 +211,46 @@ func TestDifferential(t *testing.T) {
 		t.Logf("all %d cases match", len(edgeCases))
 	}
 }
+
+// TestDifferentialDjot checks the djot writer through djot.js's parser: for
+// each official-corpus input, our RenderDjot output must mean the same thing
+// to djot.js as the original input (HTML equivalence). This deliberately does
+// not compare against djot.js's own renderDjot, which djot-go improves on
+// (hard-break support, unbounded roman numerals, nested-structure fidelity).
+func TestDifferentialDjot(t *testing.T) {
+	if _, err := exec.LookPath("node"); err != nil {
+		t.Skip("node not available")
+	}
+	if _, err := os.Stat("/app/render.mjs"); err != nil {
+		t.Skip("render.mjs not found (run inside difftest container)")
+	}
+
+	inputs := []string{
+		"# Heading\n\npara *strong* _em_\n",
+		"- a\n- b\n\n1. x\n2. y\n",
+		"> quote\n\n``` go\ncode\n```\n",
+		"| a | b |\n|---|---|\n| c | d |\n",
+		": term\n\n  definition\n",
+		"text[^1]\n\n[^1]: note\n",
+		"[link](url) ![img](src) `code` $`x`\n",
+		"{#id .cls}\n# attrs\n",
+	}
+	var failures []string
+	for i, input := range inputs {
+		out := djot.RenderDjot(djot.Parse(input))
+		jsOriginal, err1 := renderWithJS(input)
+		jsRoundTrip, err2 := renderWithJS(out)
+		if err1 != nil || err2 != nil {
+			t.Logf("case %d: djot.js error: %v / %v", i, err1, err2)
+			continue
+		}
+		if jsOriginal != jsRoundTrip {
+			failures = append(failures, fmt.Sprintf(
+				"case %d:\n  input: %q\n  rendered djot: %q\n  js(original):  %q\n  js(roundtrip): %q",
+				i, input, out, jsOriginal, jsRoundTrip))
+		}
+	}
+	if len(failures) > 0 {
+		t.Errorf("%d/%d divergences:\n%s", len(failures), len(inputs), strings.Join(failures, "\n\n"))
+	}
+}

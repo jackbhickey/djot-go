@@ -31,6 +31,12 @@
 //	    return djot.Continue
 //	})
 //
+// # Rendering back to djot
+//
+// [RenderDjot] serializes a document to normalized djot markup, closing the
+// parse → transform → write loop; [WithWrapWidth] controls prose wrapping.
+// Reparsing the output yields an equivalent document.
+//
 // # Custom rendering
 //
 // Override rendering for specific node kinds with [WithNodeRenderer]:

@@ -42,6 +42,16 @@ func TestRunJSONFormat(t *testing.T) {
 	}
 }
 
+func TestRunDjotFormat(t *testing.T) {
+	code, out, errw := runArgs(t, []string{"-t", "djot"}, "Hello  *world*\n\n1. a\n")
+	if code != 0 {
+		t.Fatalf("exit = %d, stderr = %q", code, errw)
+	}
+	if out != "Hello  *world*\n\n1. a\n" {
+		t.Errorf("unexpected djot output: %q", out)
+	}
+}
+
 func TestRunASTFormat(t *testing.T) {
 	code, out, _ := runArgs(t, []string{"--to", "ast"}, "hi")
 	if code != 0 {

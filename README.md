@@ -240,6 +240,25 @@ footnotes, while replaying children containing footnote references can repeat
 reference anchors. Use the mutable Node tree when an extension needs to change
 the document's footnote structure rather than only its presentation.
 
+### Render back to djot
+
+`RenderDjot` serializes a document to djot markup, so documents can be
+parsed, transformed through the AST, and written back out:
+
+```go
+doc := djot.Parse(input)
+// ... modify the tree via doc.Root() ...
+djot := djot.RenderDjot(doc, djot.WithWrapWidth(80))
+```
+
+`WithWrapWidth(n)` wraps prose at column n (0, the default, keeps soft breaks
+as newlines without wrapping; -1 joins them with spaces). The output is
+normalized djot: reparsing it yields an equivalent document, which also makes
+`djot -t djot` a basic formatter. Some source-level spellings are not stored
+in the AST and normalize accordingly: ordered-list delimiters become `1.`
+style, resolved reference links are written as inline links (the reference
+definitions are kept), and thematic breaks become `* * * * *`.
+
 ### Inspect the AST
 
 ```go
@@ -248,7 +267,8 @@ fmt.Println(djot.RenderAST(doc, false)) // set true for source positions
 
 ## Command-line tool
 
-The `djot` command converts djot to HTML (default), the text AST, or JSON. It
+The `djot` command converts djot to HTML (default), the text AST, JSON, or
+normalized djot. It
 reads from the given files, or from stdin when none are given:
 
 ```
@@ -262,7 +282,7 @@ $ djot -o out.html doc.dj
 
 | Option | Description |
 | --- | --- |
-| `-t`, `--to FORMAT` | Output format: `html`, `ast`, or `json` (default `html`). |
+| `-t`, `--to FORMAT` | Output format: `html`, `ast`, `json`, or `djot` (default `html`). |
 | `-o`, `--output FILE` | Write to `FILE` instead of stdout. |
 | `-p`, `--sourcepos` | Include source positions (`ast` and `json` formats). |
 | `--version` | Print version and exit. |

@@ -41,7 +41,7 @@ func Run(args []string, in io.Reader, out, errw io.Writer) int {
 	fs.Usage = func() { usage(fs) }
 
 	// Each option has a long and short form sharing one variable.
-	fs.StringVar(&format, "to", "html", "output format: html, ast, or json")
+	fs.StringVar(&format, "to", "html", "output format: html, ast, json, or djot")
 	fs.StringVar(&format, "t", "html", "output format (shorthand for --to)")
 	fs.StringVar(&output, "output", "", "write output to a file instead of stdout")
 	fs.StringVar(&output, "o", "", "write output to a file (shorthand for --output)")
@@ -102,6 +102,9 @@ var renderers = map[string]func(w io.Writer, doc *djot.Doc, sourcepos bool) erro
 	},
 	"json": func(w io.Writer, doc *djot.Doc, sourcepos bool) error {
 		return djot.RenderASTJSONTo(w, doc, sourcepos)
+	},
+	"djot": func(w io.Writer, doc *djot.Doc, _ bool) error {
+		return djot.RenderDjotTo(w, doc)
 	},
 }
 
